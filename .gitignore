@@ -3,6 +3,9 @@ ext_tools/tools/AttacKG/new_cti.model
 ext_tools/tools/AttacKG/tram_test
 ext_tools/tools/AttacKG/bosch_test
 
+classification/fine_tuned/
+classification/datasets/
+
 classification/local/*
 
 # Byte-compiled / optimized / DLL files
