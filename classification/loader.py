@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from mitreattack.stix20 import MitreAttackData
 
-from const import *
+from .const import *
 
 
 TAU = 0.5
@@ -163,6 +163,7 @@ class Tram10Dataset(MultiLabelTTPSentenceDataset):
     def __init__(self, dataframe, tokenizer):
         super().__init__(dataframe, tokenizer, TRAM_TECHNIQUES_10_LABELS)
 
+
 class Tram25Dataset(MultiLabelTTPSentenceDataset):
     def __init__(self, dataframe, tokenizer):
         super().__init__(dataframe, tokenizer, TRAM_TECHNIQUES_25_LABELS)
@@ -244,7 +245,8 @@ def load_untrained_model(model_name, dataset_name, multi_label=True):
             label2id=label2id,
         ), AutoTokenizer.from_pretrained("local/CyBERT-Base-MLM-v1.1")
     elif model_name == "tram_multi_label_model":
-        tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", max_length=512)
+        tokenizer = BertTokenizer.from_pretrained(
+            "allenai/scibert_scivocab_uncased", max_length=512)
         bert = BertForSequenceClassification.from_pretrained(
             "local/tram_finetuned",
             num_labels=num_labels,
@@ -253,7 +255,8 @@ def load_untrained_model(model_name, dataset_name, multi_label=True):
         )
         return bert, tokenizer
     elif model_name == "scibert_multi_label_model":
-        tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", max_length=512)
+        tokenizer = BertTokenizer.from_pretrained(
+            "allenai/scibert_scivocab_uncased", max_length=512)
         bert = BertForSequenceClassification.from_pretrained("local/scibert_multi_label_model")
         return bert, tokenizer
     else:
@@ -311,22 +314,24 @@ def load_datasets_for_finetuning_sentence_model():
         ttps.append({"id": technique_id, "sentence": content})
 
     ttps = sorted(ttps, key=lambda x: x["id"])
-    df = pd.concat([pd.read_json("datasets/tram_train.json").rename(columns={"doc_title": "document"}), pd.read_json("datasets/bosch_train.json")]).reset_index(drop=True)
+    df = pd.concat([pd.read_json("datasets/tram_train.json").rename(
+        columns={"doc_title": "document"}), pd.read_json("datasets/bosch_train.json")]).reset_index(drop=True)
     return ttps
 
-def load_augmented(dataset_name, batch_size, tokenizer, test_size=0.2, random_state=0, per_document=False):
+
+def load_augmented(dataset_name, batch_size, tokenizer,
+                   test_size=0.2, random_state=0, per_document=False):
     if dataset_name == ExpDataset.TRAM_AUGMENTED_ARTIFICIAL:
         df_train = pd.read_json("datasets/tram_train_augmented_artificial.json")
     elif dataset_name == ExpDataset.TRAM_AUGMENTED_OOD:
         df_train = pd.read_json("datasets/tram_train_augmented_ood.json")
-
 
     df_original = pd.read_json("datasets/tram_train.json")
     _, df_val = train_test_split(df_original, test_size=test_size, random_state=random_state)
     df_test = pd.read_json("datasets/tram_test.json")
     train_set = TramDataset(df_train, tokenizer)
     val_set = TramDataset(df_val, tokenizer)
-    
+
     train_params = {"batch_size": batch_size, "shuffle": True, "num_workers": 0}
     val_params = {"batch_size": batch_size, "shuffle": False, "num_workers": 0}
     test_params = {"batch_size": batch_size, "shuffle": False, "num_workers": 0}
@@ -340,16 +345,17 @@ def load_augmented(dataset_name, batch_size, tokenizer, test_size=0.2, random_st
         else:
             grouped = df_test.groupby('document')
         df_list = {k: group for k, group in grouped}
-        test_sets = {k: TramDataset(d, tokenizer) for k,d in df_list.items()}
-        return None, None, {k: DataLoader(d, **test_params) for k,d in test_sets.items()}
+        test_sets = {k: TramDataset(d, tokenizer) for k, d in df_list.items()}
+        return None, None, {k: DataLoader(d, **test_params) for k, d in test_sets.items()}
     else:
         test_set = TramDataset(df_test, tokenizer)
         testing_loader = DataLoader(test_set, **test_params)
-    
+
     return training_loader, val_loader, testing_loader
 
 
-def load_datasets(dataset_name, batch_size, tokenizer, test_size=0.2, random_state=0, per_document=False):
+def load_datasets(dataset_name, batch_size, tokenizer,
+                  test_size=0.2, random_state=0, per_document=False):
     dataset_name = ExpDataset(dataset_name)
     dataset_class = None
     df_train_name = None
@@ -358,35 +364,35 @@ def load_datasets(dataset_name, batch_size, tokenizer, test_size=0.2, random_sta
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschTechniquesDataset
-    elif dataset_name == ExpDataset.BOSCH_TACTICS: 
+    elif dataset_name == ExpDataset.BOSCH_TACTICS:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschTacticsDataset
-    elif dataset_name == ExpDataset.BOSCH_GROUPS: 
+    elif dataset_name == ExpDataset.BOSCH_GROUPS:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschGroupsDataset
-    elif dataset_name == ExpDataset.BOSCH_SOFTWARE: 
+    elif dataset_name == ExpDataset.BOSCH_SOFTWARE:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschSoftwareDataset
-    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_10: 
+    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_10:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = Bosch10TechniquesDataset
-    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_25: 
+    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_25:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = Bosch25TechniquesDataset
-    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_50: 
+    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_50:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = Bosch50TechniquesDataset
-    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_53: 
+    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_53:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = Bosch53TechniquesDataset
-    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_SL: 
+    elif dataset_name == ExpDataset.BOSCH_TECHNIQUES_SL:
         df_train_name = "datasets/bosch_train.json"
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschTechniquesDatasetSL
@@ -411,8 +417,12 @@ def load_datasets(dataset_name, batch_size, tokenizer, test_size=0.2, random_sta
         df_test_name = "datasets/bosch_test.json"
         dataset_class = BoschAllDataset
     elif dataset_name in [ExpDataset.TRAM_AUGMENTED_ARTIFICIAL, ExpDataset.TRAM_AUGMENTED_OOD]:
-        return load_augmented(dataset_name, batch_size, tokenizer, test_size, random_state, per_document)
-    
+        return load_augmented(dataset_name, batch_size, tokenizer,
+                              test_size, random_state, per_document)
+
+    df_train_name = '/'.join(['TTP', 'SoK_CTI_TTP', 'classification', df_train_name])
+    df_test_name = '/'.join(['TTP', 'SoK_CTI_TTP', 'classification', df_test_name])
+
     df = pd.read_json(df_train_name)
     df_train, df_val = train_test_split(df, test_size=test_size, random_state=random_state)
     df_test = pd.read_json(df_test_name)
@@ -420,7 +430,7 @@ def load_datasets(dataset_name, batch_size, tokenizer, test_size=0.2, random_sta
     train_set = dataset_class(df_train, tokenizer)
     val_set = dataset_class(df_val, tokenizer)
 
-    train_params = {"batch_size": batch_size, "shuffle": True, "num_workers": 0}
+    train_params = {"batch_size": batch_size, "shuffle": False, "num_workers": 0}
     val_params = {"batch_size": batch_size, "shuffle": False, "num_workers": 0}
     test_params = {"batch_size": batch_size, "shuffle": False, "num_workers": 0}
 
@@ -433,8 +443,8 @@ def load_datasets(dataset_name, batch_size, tokenizer, test_size=0.2, random_sta
         else:
             grouped = df_test.groupby('document')
         df_list = {k: group for k, group in grouped}
-        test_sets = {k: dataset_class(d, tokenizer) for k,d in df_list.items()}
-        return None, None, {k: DataLoader(d, **test_params) for k,d in test_sets.items()}
+        test_sets = {k: dataset_class(d, tokenizer) for k, d in df_list.items()}
+        return None, None, {k: DataLoader(d, **test_params) for k, d in test_sets.items()}
     else:
         test_set = dataset_class(df_test, tokenizer)
         testing_loader = DataLoader(test_set, **test_params)

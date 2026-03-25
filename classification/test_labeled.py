@@ -2,16 +2,16 @@
 # # Test "Supervised" BERT Models
 
 import torch
-import loader
-from const import ExpDataset
+from . import loader
+from .const import ExpDataset
 
 import os
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from train_common import TAU
+from .train_common import TAU
 from collections import defaultdict
-from test_common import calc_results_per_document, calc_results_per_sentence
+from .test_common import calc_results_per_document, calc_results_per_sentence
 
 
 def get_innermost_dirs(base_dir):
@@ -26,7 +26,7 @@ def get_innermost_dirs(base_dir):
 # [markdown]
 # ## Test functions
 # The following snippet contains all the functions that, given a model and a set of (or a single) data loaders, will return the labels and predictions.
-def run_test_multi_label_per_document(model, data_loaders):
+def run_test_multi_label_per_document(model, data_loaders, device):
     model.to(device)
     model.eval()
 
@@ -56,7 +56,7 @@ def run_test_multi_label_per_document(model, data_loaders):
     return docs
 
 
-def run_test_multi_label_per_sentence(model, data_loader):
+def run_test_multi_label_per_sentence(model, data_loader, device):
     model.to(device)
     model.eval()
 
